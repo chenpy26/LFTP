@@ -20,13 +20,16 @@ filename = head['filename']
 
 if (os.path.exists(filename)):
     info = "error"
-    err = info.encode('utf-8')
-    s.sendto(err, addr)
+else:
+    info = "right"
+err = info.encode('utf-8')
+s.sendto(err, addr)
 
 count = 0
 lost = 0
 l = []
 rwnd = 32
+last_ack = ""
 with open('Myfile', 'wb') as f:
     while filesize:
         if filesize >= buffer:
@@ -36,20 +39,18 @@ with open('Myfile', 'wb') as f:
             #收到的包编号不对就舍弃
             if (Id != count):
                 lost += 1
-                ack = (('ACK'+str(count-1)).encode('utf-8'))
+                ack = (('ack'+str(count-1)).encode('utf-8'))
                 s.sendto(ack, addr)
-            #否则写入list并发送正确的ack
+            #否则发送正确的ack
             else:
                 count += 1
                 f.write(data)
-                ack = (('ACK'+str(Id)).encode('utf-8'))
-                s.sendto(ack, addr)
-                print(count)
+                current_ack = (('ack'+str(Id)).encode('utf-8'))
+                if (current_ack != last_ack):
+                    s.sendto(current_ack, addr)
+                last_ack = current_ack
         else:
-            print(filesize)
-            content, addr = s.recvfrom(filesize)
-            mystr = str(filesize - 4)
-            Id, data = struct.unpack('i'+mystr+'s', content)
-            f.write(data)
+            print("Socket is closed.")
+            exit()
             break
 s.close()

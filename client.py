@@ -12,7 +12,7 @@ IP_PORT = ('127.0.0.1', 9999)
 print('Please input your file name:')
 file_name = input()
 print('Client is ready!')
-head = {'filepath':r'C:\Users\17980\Desktop',
+head = {'filepath':r'C:\Users\17980\Desktop\LFTP',
     'filename':file_name,
     'filesize':None}
 try:
@@ -47,7 +47,7 @@ ACKnum = 0
 with open(file_path, 'rb') as f:
     last_ack = ''
     while file_size:
-        if (file_size >= buffer):
+        if (file_size >= 0):
             #每次发送cwnd个分组
             while send_num:
                 content = struct.pack('i1024s', count, f.read(buffer))  
@@ -55,8 +55,9 @@ with open(file_path, 'rb') as f:
                 file_size -= buffer
                 count += 1
                 send_num -= 1
-                print("ack", ACKnum, "and num", count, "has been sent.")
+                print("ack"+str(ACKnum), "and num"+str(count), "has been sent.")
                 # time.sleep(0.1)
+            ACKnum += 1
 
             #接收
             current_ack = s.recv(1024).decode('utf-8')
@@ -73,23 +74,24 @@ with open(file_path, 'rb') as f:
 
             #没有重复的ack则cwnd翻倍
             if repeat == 0:
-                if first:
+                if cwnd < ssthresh:
                     cwnd *= 2
                 else:
                     cwnd += 1
             repeat = 0    
             
             #如果收到了正确的ACK则继续发
-            if last_ack == ('ACK'+str(count-1)):
+            if ACKnum - 1 == int(current_ack[3:]):
                 send_num = cwnd
 
             #否则重新发送 增大file_size设置num
             else:
+                ssthresh = cwnd/2
                 n = last_ack[3:]
                 send_num = count-int(n)-1
                 for i in range(send_num):
                     file_size += buffer
         else:
-            content = f.read(file_size)
-            s.sendto(content, IP_PORT)
+            print("The file has been sent.\nSocket is closed.")
+            exit()
             break
