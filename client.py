@@ -4,15 +4,16 @@ import os
 import socket
 import time
 import sys
-
+#'C:\Users\17980\Desktop\LFTP'
 buffer = 1024
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 IP_PORT = ('127.0.0.1', 9999)
-
+print('Please input your file path:')
+file_path = input()
 print('Please input your file name:')
 file_name = input()
 print('Client is ready!')
-head = {'filepath':r'C:\Users\17980\Desktop\LFTP',
+head = {'filepath':file_path,
     'filename':file_name,
     'filesize':None}
 try:
